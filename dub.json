@@ -1,0 +1,9 @@
+{
+	"name": "packaged",
+	"authors": [
+		"Niklas Stambor"
+	],
+	"description": "A D based package manager",
+	"copyright": "Copyright © 2018, Niklas Stambor",
+	"license": "proprietary"
+}
