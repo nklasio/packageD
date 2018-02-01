@@ -1,4 +1,4 @@
-module EnvironmentManager;
+module core.EnvironmentManager;
 
 /// Struct to keep used directorys organized
 static struct EnvironmentManager {

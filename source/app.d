@@ -4,7 +4,7 @@ import std.getopt;
 
 int main(string[] args)
 {
-	import EnvironmentManager : EnvironmentManager;
+	import core.EnvironmentManager : EnvironmentManager;
 	EnvironmentManager.initialize();
 
 	string pack = "";
