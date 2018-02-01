@@ -3,7 +3,7 @@ module core.packageD;
 class packageD {
     import core.EnvironmentManager : EnvironmentManager;
     import std.stdio : printf;
-    import std.getopt;
+    import std.getopt : getopt, defaultGetoptPrinter;
 
     this(string[] args) {
         if(args.length == 1)
