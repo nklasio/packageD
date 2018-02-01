@@ -13,14 +13,12 @@ int main(string[] args)
 		ver();
 	}
 
-	GetoptResult helpInformation = getopt(args, "version|v", "Show version of packaged", &ver,
-									 			"environment|env", "Debug Environment Variables", &eDebug);
+	GetoptResult helpInformation = getopt(args, "version|v", "Show version of packaged", &ver);
 
 	if(helpInformation.helpWanted) {
 		defaultGetoptPrinter("usage: packaged <operation> [...]", helpInformation.options);
 	} 
 
-	
 
 	return handlerFailed ? 1 : 0;
 }
@@ -36,9 +34,3 @@ static void ver() {
 		printf("Use --help or \"man packaged\" to get help\n");
 		printf("\n");
 }
-
-static void eDebug() {
-	import EnvironmentManager : EnvironmentManager;
-	EnvironmentManager.dDebug();
-}
-

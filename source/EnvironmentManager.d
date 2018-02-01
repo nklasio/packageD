@@ -15,53 +15,41 @@ static struct EnvironmentManager {
     /// Sharedlogger
     FileLogger sharedLogger;
 
-    void dDebug() {
-        import std.stdio : writeln;
-        writeln(tmpDirectory);
-        writeln(configDirectory);
-        writeln(logDirectory);
-    }
-
     /// Initialize Environment Manager
     void initialize() {
-        import std.process : environment;
-
-        tmpDirectory = environment.get("dTmp") ? environment.get("dTmp") : null;
-        configDirectory = environment.get("dConfig") ? environment.get("dConfig") : null;
-        logDirectory = environment.get("dLog") ? environment.get("dLog") : null;
-
-        if(checkFolders()) {
-            setupLogger();
+        version(Windows) {
+            configDirectory = setupFolder("dConfig", "C:\\.packageD\\config\\");
+            tmpDirectory = setupFolder("dTmp", "C:\\.packageD\\tmp\\");
+            logDirectory = setupFolder("dLog", "C:\\.packageD\\log\\");
+        } else version(linux) { 
+            configDirectory = setupFolder("dConfig", "/etc/packageD/");
+            tmpDirectory = setupFolder("dTmp", "/tmp/packageD/");
+            logDirectory = setupFolder("dLog", "/var/log/packageD/");
         } else {
-            import std.stdio : readln, writeln;
-                writeln("Do you want packageD to set default Environment Variables? Y/n:");
-
-            import std.string : dup, strip, replace;
-            string result;
-            char choice;
-            result = readln.strip;
-
-            if(result.length > 0) {
-                choice = result.strip.dup[0];
-            }
-            else { 
-                choice = 'y';
-            }
-
-            if(choice == 'y' || choice == 'Y' || choice != 'n' || choice != 'N' ) {
-                    if(setDefaultEnvironmentVariables()) {
-                        writeln("Successfully set default Environment Variables!");
-                        writeln("Reinitializing Environment Manager");
-                        setupLogger();
-                    } else {
-                        writeln("!Error setting default Environment Variables!");
-                    }
-            }
-
+            import std.stdio : writeln;
+            import std.stdio : readln;
+            writeln("OS NOT SUPPORTED YET!");
+            writeln("Press any key to continue...");
+            readln();
+            exit(1);
+    
+            setupLogger();
         }
     }
 
     private: 
+    string setupFolder(string env, string path) {
+        import std.process : environment;
+        if(environment.get(env)) {
+            return environment.get(env);
+        } else {
+            import std.file : exists, mkdirRecurse;
+            if(!exists(path)) 
+                mkdirRecurse(path);
+            return path;
+        }
+    }
+
     void setupLogger() {
         import std.datetime.systime : Clock;
         import std.string : format;
@@ -69,65 +57,4 @@ static struct EnvironmentManager {
         sharedLogger = new FileLogger(format("%s%s.log",logDirectory, "Test"));
         sharedLogger.log("Logging!");
     }
-
-    ///Checks needed Environment Variables
-    bool checkFolders() {
-        bool failed;
-        import std.stdio : writeln;
-        if(tmpDirectory is null)
-            failed = true;
-        if(configDirectory is null)
-            failed = true;
-        if(logDirectory is null) 
-            failed = true;
-        return !failed;
-    }
-
-    bool setDefaultEnvironmentVariables() {
-        import std.file : mkdirRecurse, exists;
-        import std.process : environment;
-        version(Windows) { 
-            if(!exists("C:\\.packageD\\config\\")) {
-                mkdirRecurse("C:\\.packageD\\config\\");
-                environment["dConfig"] = "C:\\.packageD\\config\\";
-            }
-            if(!exists("C:\\.packageD\\log\\")) {
-                mkdirRecurse("C:\\.packageD\\log\\");
-                environment["dLog"] = "C:\\.packageD\\log\\";
-            }
-            if(!exists("C:\\.packageD\\tmp\\")) {
-                mkdirRecurse("C:\\.packageD\\tmp\\");
-                environment["dTmp"] = "C:\\.packageD\\tmp\\";
-            }
-            configDirectory = "C:\\.packageD\\config\\";
-            logDirectory = "C:\\.packageD\\log\\";
-            tmpDirectory = "C:\\.packageD\\tmp\\";
-        } else version(linux) {
-            if(!exists("/etc/packageD/")) {
-                mkdirRecurse("/etc/packageD/");
-                environment["dConfig"] = "/etc/packageD/";
-            }
-            if(!exists("/var/log/packageD")) {
-                mkdirRecurse("/var/log/packageD/");
-                environment["dLog"] = "/var/log/packageD/";
-            }
-            if(!exists("/tmp/packageD/")) {
-                mkdirRecurse("/tmp/packageD/");
-                environment["dTmp"] = "/tmp/packageD/";
-            }
-            if(!exists("/usr/packageD/")) {
-                mkdirRecurse("/usr/packageD/");
-            }
-            configDirectory = "/etc/packageD/";
-            logDirectory = "/var/log/packageD/";
-            tmpDirectory = "/tmp/packageD/";
-        } else {
-            import std.stdio : writeln;
-            writeln("OS NOT SUPPORTED YET!");
-            exit(1);
-            return false;
-        }
-        return true;
-    }
-
 }
