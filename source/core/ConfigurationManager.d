@@ -1,7 +1,7 @@
-module core.ConfigManager;
+module core.ConfigurationManager;
 import core.RepositoryManager;
 
-class ConfigManager {
+class ConfigurationManager {
     this(RepositoryManager repositoryManager) {
         this.repositoryManager = repositoryManager;
        loadConfigurations();

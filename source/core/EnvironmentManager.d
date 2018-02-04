@@ -44,7 +44,7 @@ static struct EnvironmentManager {
         logInitialization();
     }
 
-    private: 
+     
     string setupFolder(string env = null, string path = null) {
         import std.process : environment;
         if(env != null && environment.get(env)) {
@@ -61,7 +61,7 @@ static struct EnvironmentManager {
             return path;
         }
     }
-
+    private:
     void setupLogger() {
         import std.datetime.systime : Clock;
         import std.string : format;

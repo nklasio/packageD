@@ -10,16 +10,18 @@ class packageD {
             ver();
 	    EnvironmentManager.initialize();
         EnvironmentManager.sharedLogger.log("[I]Initializing packageD");
-        auto helpInformation = getopt(args, "version|v", "Show version of packaged", &ver);
+        string pac;
+        auto helpInformation = getopt(args, "version|v", "Show version of packaged", &ver, "search|s", "Search package", &pac);
 
         if(helpInformation.helpWanted) {
             defaultGetoptPrinter("usage: packaged <operation> [...]", helpInformation.options);
         } 
         import core.RepositoryManager : RepositoryManager, RequestType;
-        import core.ConfigManager : ConfigManager;
+        import core.ConfigurationManager : ConfigurationManager;
         RepositoryManager repositoryManager = new RepositoryManager();
-        ConfigManager configurations = new ConfigManager(repositoryManager);
-        repositoryManager.Request(RequestType.AUR, "arc");
+        ConfigurationManager configurationManager = new ConfigurationManager(repositoryManager);
+        if(pac)
+            repositoryManager.Request(RequestType.AUR, pac);
     }
 
     public static void ver() {
