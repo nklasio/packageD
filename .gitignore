@@ -12,3 +12,5 @@ packaged-test-*
 *.o
 *.obj
 *.lst
+config/
+debug.request

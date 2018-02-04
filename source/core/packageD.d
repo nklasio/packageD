@@ -15,6 +15,11 @@ class packageD {
         if(helpInformation.helpWanted) {
             defaultGetoptPrinter("usage: packaged <operation> [...]", helpInformation.options);
         } 
+        import core.RepositoryManager : RepositoryManager, RequestType;
+        import core.ConfigManager : ConfigManager;
+        RepositoryManager repositoryManager = new RepositoryManager();
+        ConfigManager configurations = new ConfigManager(repositoryManager);
+        repositoryManager.Request(RequestType.AUR, "arc");
     }
 
     public static void ver() {
