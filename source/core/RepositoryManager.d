@@ -34,7 +34,10 @@ class RepositoryManager {
         }
         if (failed)
             return;
-        //TODO: CHECK IF PACKAGE ALLREADY EXISTS LOCALY
+        
+        if(true) {
+
+        }
         //TODO: CHECK FOR USER
         GatheringPackage(type, pac);
         foreach(d; dependencies) { 
@@ -52,28 +55,25 @@ class RepositoryManager {
         
         import std.array: array;
 
-        writeln("Downloading package...");
 
         final switch(type) {
             case RequestType.AUR: 
-                auto p = filter!(rep => canFind(rep, "aur"))(repositorys);
+                auto p = filter!(rep => canFind(rep, "aur"))(mirrors);
                 import std.file : exists, getSize;
                 foreach(r; p) {
                     try {
-                        version(Windows) {
-                            string pacFile = format("%s%s.tar.gz", EnvironmentManager.setupFolder(null, "C:\\.packageD\\data\\repositorys\\aur\\"), pac["Name"].str);
-                            download(format("%s%s",r, pac["URLPath"].str), pacFile);
-                            if(exists(pacFile)) {
-                                writeln(format("Successfully downloaded! %s.tar.gz | %s", pac["Name"].str, getSize(pacFile)));
-                                return true;
-                            }
-                        } else version(linux) {
-                            string pacFile = format("%s%s.tar.gz", EnvironmentManager.setupFolder(null, "/var/packageD/repositorys/aur/"), pac["Name"].str);
-                            download(format("%s%s", r, pac["URLPath"].str), pacFile);
-                            if(exists(pacFile)) {
-                                writeln(format("Successfully downloaded! %s.tar.gz | %s", pac["Name"].str, getSize(pacFile)));
-                                return true;
-                            }
+                        import cache.PackageCache : PackageCache;
+                        string pacFile = format("%s%s.tar.gz", EnvironmentManager.setupSubFolder(EnvironmentManager.repositoryDirectory, "aur"), pac["Name"].str);
+                        if(PackageCache.cacheContains(type, pac["Name"].str)) {
+                            writeln(format("Package already in cache. Skipping download! | %s", getSize(pacFile)));
+                            return true;
+                        }
+                        writeln("Downloading package...");
+                        download(format("%s%s",r, pac["URLPath"].str), pacFile);
+                        if(exists(pacFile)) {
+                            writeln(format("Successfully downloaded! %s.tar.gz | %s", pac["Name"].str, getSize(pacFile)));
+                            PackageCache.rebuildCache(RequestType.AUR);
+                            return true;
                         }
                     }
                     catch(CurlException exc) {
@@ -107,7 +107,7 @@ class RepositoryManager {
 
         final switch(requestType) {
             case RequestType.AUR: 
-                auto p = filter!(rep => canFind(rep, "aur"))(repositorys);
+                auto p = filter!(rep => canFind(rep, "aur"))(mirrors);
 
                 foreach(r; p) {
                     if(!packet.isNull)
@@ -146,20 +146,20 @@ class RepositoryManager {
 
 
 
-    void addRepository(string repository) {
-        this.repositorys ~= repository;
+    void addMirror(string repository) {
+        this.mirrors ~= repository;
     }
-    void addRepositorys(string[] repositorys) {
-        this.repositorys ~= repositorys;
+    void addMirrors(string[] mirrors) {
+        this.mirrors ~= mirrors;
     }
 
     this() {
-        this.repositorys = [];
+        this.mirrors = [];
     }
 
     ~this() {
         
     }
     private:
-    string[] repositorys;
+    string[] mirrors;
 }

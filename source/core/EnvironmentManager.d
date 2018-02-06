@@ -43,7 +43,25 @@ static struct EnvironmentManager {
         setupLogger();
         logInitialization();
     }
-
+    
+    string setupSubFolder(string basePath, string sub) {
+        import std.file : exists, mkdirRecurse;
+        import std.path : dirSeparator;
+        import std.string : format;
+        version(Windows) {
+            if(!exists(format("%s\\%s", basePath, sub))) {
+                mkdirRecurse(format("%s\\%s", basePath, sub));
+            }
+            return format("%s\\%s\\", basePath, sub);
+        } else version(linux)  {
+            if(!exists(format("%s/%s", basePath, sub))) {
+                mkdirRecurse(format("%s/%s", basePath, sub));
+            }
+            return format("%s/%s/", basePath, sub);
+        } else {
+            return "";
+        }
+    }
      
     string setupFolder(string env = null, string path = null) {
         import std.process : environment;

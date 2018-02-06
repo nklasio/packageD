@@ -10,8 +10,12 @@ class packageD {
             ver();
 	    EnvironmentManager.initialize();
         EnvironmentManager.sharedLogger.log("[I]Initializing packageD");
+        import cache.PackageCache : PackageCache;
+        PackageCache.buildCaches();
+        EnvironmentManager.sharedLogger.log("[I]Building caches");
+
         string pac;
-        auto helpInformation = getopt(args, "version|v", "Show version of packaged", &ver, "search|s", "Search package", &pac);
+        auto helpInformation = getopt(args, "version|v", "Show version of packaged", &ver, "search|S", "Search package", &pac);
 
         if(helpInformation.helpWanted) {
             defaultGetoptPrinter("usage: packaged <operation> [...]", helpInformation.options);
@@ -20,6 +24,7 @@ class packageD {
         import core.ConfigurationManager : ConfigurationManager;
         RepositoryManager repositoryManager = new RepositoryManager();
         ConfigurationManager configurationManager = new ConfigurationManager(repositoryManager);
+
         if(pac)
             repositoryManager.Request(RequestType.AUR, pac);
     }

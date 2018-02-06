@@ -22,7 +22,7 @@ class ConfigurationManager {
             auto j = parseJSON(readText(f)).object;
             JSONValue[] rep = j["repositorys"].array;
             foreach(r; rep) {
-                repositoryManager.addRepository(r.str);
+                repositoryManager.addMirror(r.str);
             }
         }
         
