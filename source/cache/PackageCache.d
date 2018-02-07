@@ -1,33 +1,47 @@
 module cache.PackageCache;
 
 struct PackageCache {
+    import core.RepositoryManager : RepositoryType;
+    import std.stdio : writeln;
     public static: 
+
     void buildCaches() {
-        import core.EnvironmentManager : EnvironmentManager;
-        import std.string : format;
         import std.file;
-        import std.path : dirSeparator;
-        import std.algorithm.iteration : filter;
-        import std.json : toJSON;
-        import std.stdio : writeln;
-        auto reps = filter!(ent => ent.isDir)(dirEntries(EnvironmentManager.repositoryDirectory, SpanMode.shallow));
-        foreach(rep; reps) {
-            import std.array : array, join;
-            auto pacs = filter!(ent => ent.isFile)(dirEntries(rep, "*.tar*", SpanMode.shallow)).array;
-            string[] packages;
-            foreach(pac; pacs){
-                packages ~=pac;
+        import std.traits;
+        foreach(rep; EnumMembers!RepositoryType) {
+            import std.algorithm.iteration : filter;
+            import std.array : array;
+            import std.conv : to;
+            import core.EnvironmentManager : EnvironmentManager;
+            auto repository = to!string(cast(OriginalType!RepositoryType)rep);
+            auto repoPath = std.string.format("%s%s%s", EnvironmentManager.repositoryDirectory, repository, std.path.dirSeparator);
+            if(std.file.exists(repoPath)){
+                auto pacs = filter!(ent => ent.isFile)(dirEntries(repoPath, "{*.tar*,*.pacD}", SpanMode.shallow)).array;
+                foreach(p; pacs) {
+                    repositoryCache[rep] ~= p;
+                }
             }
-            import std.json : JSONValue;
-            JSONValue jValue;
-            jValue["packages"] = packages;
-            auto cacheFile = format("%s%scache.json", rep, dirSeparator);
-            if(exists(cacheFile)) remove(cacheFile);
-            write(cacheFile, toJSON(jValue));
-            cacheFiles ~= cacheFile;
         }
     }
-    import core.RepositoryManager : RepositoryType;
+
+    void writeCaches() {
+        import std.file;
+        import std.traits;
+        foreach(rep; EnumMembers!RepositoryType) {
+            import std.conv : to;
+            import core.EnvironmentManager : EnvironmentManager;
+            auto repository = to!string(cast(OriginalType!RepositoryType)rep);
+            auto cacheFile = std.string.format("%s%s%scache.json", EnvironmentManager.repositoryDirectory, repository, std.path.dirSeparator);
+            
+            import std.json : JSONValue, toJSON;
+            JSONValue jValue;
+            jValue["packages"] = repositoryCache[rep];
+            if(exists(cacheFile)) remove(cacheFile);
+            write(cacheFile, toJSON(jValue));
+        }
+                import std.json : toJSON;
+        import std.stdio : writeln;
+    }
 
     bool cacheContains(RepositoryType type, string pac) {
         import std.algorithm.searching : canFind;
@@ -43,54 +57,15 @@ struct PackageCache {
         return false;
     }
 
-    void rebuildCache(RepositoryType type) {
-        import core.EnvironmentManager : EnvironmentManager;
-        import std.string : format;
-        import std.file;
-        import std.path : dirSeparator;
-        import std.algorithm.iteration : filter;
-        import std.json : toJSON;
-        import std.stdio : writeln;
-
-        import std.array : array, join;
-        auto rep = format("%s%s%s", EnvironmentManager.repositoryDirectory, type, dirSeparator);
-        auto pacs = filter!(ent => ent.isFile)(dirEntries(rep, "*.tar*", SpanMode.shallow)).array;
-        string[] packages;
-        foreach(pac; pacs){
-            packages ~=pac;
-        }
-        import std.json : JSONValue;
-        JSONValue jValue;
-        jValue["packages"] = packages;
-        auto cacheFile = format("%s%scache.json", rep, dirSeparator);
-        remove(cacheFile);
-        write(cacheFile, toJSON(jValue));
-        cacheFiles ~= cacheFile;
+    void addToCache(RepositoryType type, string pac) {
+        repositoryCache[type] ~= pac;
     }
 
     string[] getCacheForRepositoryType(RepositoryType type) {
-        import std.string : split, format;
-        import std.algorithm.searching : canFind;
-        import std.stdio : writeln;
-        import std.path : dirSeparator;
-        import std.algorithm.iteration : filter;
-        import std.array: array; 
-        import std.file : readText;
-        import std.json : parseJSON, JSONValue;
-        string[] ret;
-        final switch(type) {
-            case RepositoryType.AUR: 
-            auto cache = parseJSON(readText(filter!(cFile => canFind(cFile, format("%saur%s", dirSeparator, dirSeparator)))(cacheFiles).array[0]))["packages"].array;
-            foreach(c; cache) {
-                ret ~= c.str;
-            }
-            return ret;
-            case RepositoryType.pacD:
-            break;
-        }        
-        return ret;
+        return repositoryCache[type];
     }
 
     private:
     string[] cacheFiles;
+    string[][RepositoryType] repositoryCache;
 }

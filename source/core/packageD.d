@@ -27,6 +27,8 @@ class packageD {
 
         if(pac)
             repositoryManager.Request(RepositoryType.AUR, pac);
+
+        PackageCache.writeCaches();
     }
 
     public static void ver() {
@@ -41,6 +43,7 @@ class packageD {
     }
 
     ~this() {
+        import cache.PackageCache : PackageCache;
         EnvironmentManager.sharedLogger.log("[I]Destructing packageD");
     }
 

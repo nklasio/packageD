@@ -1,8 +1,8 @@
 module core.RepositoryManager;
 
 enum RepositoryType {
-    AUR = 0,
-    pacD
+    AUR = "aur",
+    pacD = "pacD"
 }
 import std.json;
 import core.EnvironmentManager;
@@ -72,7 +72,7 @@ class RepositoryManager {
                         download(format("%s%s",r, pac["URLPath"].str), pacFile);
                         if(exists(pacFile)) {
                             writeln(format("Successfully downloaded! %s.tar.gz | %s", pac["Name"].str, getSize(pacFile)));
-                            PackageCache.rebuildCache(RepositoryType.AUR);
+                            PackageCache.addToCache(RepositoryType.AUR, pac["Name"].str);
                             return true;
                         }
                     }
