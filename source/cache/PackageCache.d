@@ -27,14 +27,14 @@ struct PackageCache {
             cacheFiles ~= cacheFile;
         }
     }
-    import core.RepositoryManager : RequestType;
+    import core.RepositoryManager : RepositoryType;
 
-    bool cacheContains(RequestType type, string pac) {
+    bool cacheContains(RepositoryType type, string pac) {
         import std.algorithm.searching : canFind;
         import std.stdio : writeln;
         import std.string : format;
         import std.array : split;
-        foreach(p; getCacheForRequestType(type)){
+        foreach(p; getCacheForRepositoryType(type)){
             writeln(p);
             if(canFind(p, pac)){
                 return true;
@@ -43,7 +43,7 @@ struct PackageCache {
         return false;
     }
 
-    void rebuildCache(RequestType type) {
+    void rebuildCache(RepositoryType type) {
         import core.EnvironmentManager : EnvironmentManager;
         import std.string : format;
         import std.file;
@@ -68,7 +68,7 @@ struct PackageCache {
         cacheFiles ~= cacheFile;
     }
 
-    string[] getCacheForRequestType(RequestType type) {
+    string[] getCacheForRepositoryType(RepositoryType type) {
         import std.string : split, format;
         import std.algorithm.searching : canFind;
         import std.stdio : writeln;
@@ -79,13 +79,13 @@ struct PackageCache {
         import std.json : parseJSON, JSONValue;
         string[] ret;
         final switch(type) {
-            case RequestType.AUR: 
+            case RepositoryType.AUR: 
             auto cache = parseJSON(readText(filter!(cFile => canFind(cFile, format("%saur%s", dirSeparator, dirSeparator)))(cacheFiles).array[0]))["packages"].array;
             foreach(c; cache) {
                 ret ~= c.str;
             }
             return ret;
-            case RequestType.pacD:
+            case RepositoryType.pacD:
             break;
         }        
         return ret;

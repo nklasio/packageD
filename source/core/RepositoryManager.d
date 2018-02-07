@@ -1,6 +1,6 @@
 module core.RepositoryManager;
 
-enum RequestType {
+enum RepositoryType {
     AUR = 0,
     pacD
 }
@@ -9,7 +9,7 @@ import core.EnvironmentManager;
 
 class RepositoryManager {
     public:
-    void Info(RequestType type, JSONValue pac) {
+    void Info(RepositoryType type, JSONValue pac) {
         import std.string : format;
         import std.stdio : writeln;
 
@@ -46,7 +46,7 @@ class RepositoryManager {
 
     }
 
-    bool GatheringPackage(RequestType type, JSONValue pac) {
+    bool GatheringPackage(RepositoryType type, JSONValue pac) {
         import std.net.curl : download, CurlException;
         import std.stdio : writeln;
         import std.string : format;
@@ -57,7 +57,7 @@ class RepositoryManager {
 
 
         final switch(type) {
-            case RequestType.AUR: 
+            case RepositoryType.AUR: 
                 auto p = filter!(rep => canFind(rep, "aur"))(mirrors);
                 import std.file : exists, getSize;
                 foreach(r; p) {
@@ -72,7 +72,7 @@ class RepositoryManager {
                         download(format("%s%s",r, pac["URLPath"].str), pacFile);
                         if(exists(pacFile)) {
                             writeln(format("Successfully downloaded! %s.tar.gz | %s", pac["Name"].str, getSize(pacFile)));
-                            PackageCache.rebuildCache(RequestType.AUR);
+                            PackageCache.rebuildCache(RepositoryType.AUR);
                             return true;
                         }
                     }
@@ -83,7 +83,7 @@ class RepositoryManager {
                 }
 
                 break;
-            case RequestType.pacD: 
+            case RepositoryType.pacD: 
                 break;
         }
 
@@ -91,7 +91,7 @@ class RepositoryManager {
         return false;
     }
 
-    bool Request(RequestType requestType, string pac, bool dependency = false) {
+    bool Request(RepositoryType RepositoryType, string pac, bool dependency = false) {
         import std.stdio : writeln;
         import std.string : format;
         import std.algorithm.iteration : filter;
@@ -105,8 +105,8 @@ class RepositoryManager {
         JSONValue packet = null; 
         
 
-        final switch(requestType) {
-            case RequestType.AUR: 
+        final switch(RepositoryType) {
+            case RepositoryType.AUR: 
                 auto p = filter!(rep => canFind(rep, "aur"))(mirrors);
 
                 foreach(r; p) {
@@ -130,13 +130,13 @@ class RepositoryManager {
                     }
                 }
                 break;
-            case RequestType.pacD:
+            case RepositoryType.pacD:
                     break;
         }
         import std.file : write;
         if(!packet.isNull) {
             write("debug.request", packet.toString());
-            Info(requestType, packet);
+            Info(RepositoryType, packet);
             return true;
         } else {
             if(!dependency) writeln(format("Could not find package: %s", pac));
