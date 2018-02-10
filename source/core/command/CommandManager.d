@@ -3,10 +3,10 @@ module core.command.CommandManager;
 class CommandManager {
     import core.command.Command;
     import core.command.commands.VersionCommand;
+    import core.command.commands.HelpCommand;
     this() {
-        auto versionCommand = new VersionCommand();
-        registerCommand("v", versionCommand);
-        registerCommand("version", versionCommand);
+        registerCommand("version", new VersionCommand());
+        registerCommand("help", new HelpCommand());
     }
 
     void registerCommand(string activator, Command command) {
@@ -21,6 +21,5 @@ class CommandManager {
         else return 2;
     }
 
-    private: 
-    Command[string] registeredCommands;
+    static Command[string] registeredCommands;
 }

@@ -8,7 +8,12 @@ class VersionCommand : Command {
         return true;
     }
 
-    string discription() {
+    string description() {
         return "Displays version of packageD!";
     }
+    
+    string helpDescription() {
+        return "version - Displays version of packageD!";
+    }
+    
 }
