@@ -14,3 +14,4 @@ packaged-test-*
 *.lst
 config/
 debug.request
+.vscode/launch.json

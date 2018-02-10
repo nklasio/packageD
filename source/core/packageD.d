@@ -2,33 +2,48 @@ module core.packageD;
 
 class packageD {
     import core.EnvironmentManager : EnvironmentManager;
-    import std.stdio : printf;
-    import std.getopt : getopt, defaultGetoptPrinter;
-
+    import std.stdio;
+    import std.string;
+    
+    import core.command.CommandManager;
+    CommandManager commandManager;
     this(string[] args) {
-        if(args.length == 1)
-            ver();
 	    EnvironmentManager.initialize();
         EnvironmentManager.sharedLogger.log("[I]Initializing packageD");
         import cache.PackageCache : PackageCache;
         PackageCache.buildCaches();
         EnvironmentManager.sharedLogger.log("[I]Building caches");
 
-        string pac;
-        auto helpInformation = getopt(args, "version|v", "Show version of packaged", &ver, "search|S", "Search package", &pac);
-
-        if(helpInformation.helpWanted) {
-            defaultGetoptPrinter("usage: packaged <operation> [...]", helpInformation.options);
-        } 
         import core.RepositoryManager : RepositoryManager, RepositoryType;
         import core.ConfigurationManager : ConfigurationManager;
         RepositoryManager repositoryManager = new RepositoryManager();
         ConfigurationManager configurationManager = new ConfigurationManager(repositoryManager);
-
-        if(pac)
-            repositoryManager.Request(RepositoryType.AUR, pac);
-
         PackageCache.writeCaches();
+        commandManager = new CommandManager();
+        commandLoop(commandManager);
+    }
+
+    import std.algorithm.comparison;
+    private static void commandLoop(CommandManager commandManager) {
+        while(1) {
+            write("packageD > ");
+            auto input = stripRight(stdin.readln());
+            if(cmp(strip(input), "exit") == 0) {
+                return;
+            } else {
+                import std.array : split;
+                auto splittedInput = split(input);
+                import std.algorithm.mutation : remove;
+                auto command = splittedInput[0];
+                auto res = commandManager.execute(command, splittedInput.remove(0));
+                if(res == 2) {
+                    writeln(format("%s is not a registered command! To see all available commands type help", command));
+                }
+
+            }
+            
+
+        }
     }
 
     public static void ver() {
@@ -36,9 +51,6 @@ class packageD {
 		printf("packageD - © by Niklas Stambor\n");
 		printf("A Dlang based package manager\n");
 		printf("This program may be freely redistributed\nunder the terms of the GNU General Public License V3.\n");
-		printf("\n");
-		printf("usage: packaged <operation> [...]\n");
-		printf("Use --help or \"man packaged\" to get help\n");
 		printf("\n");
     }
 

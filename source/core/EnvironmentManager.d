@@ -26,6 +26,8 @@ static struct EnvironmentManager {
             repositoryDirectory = setupFolder(null, "C:\\.packageD\\data\\repositorys\\");
             logDirectory = setupFolder("dLog", "C:\\.packageD\\log\\");
             tmpDirectory = setupFolder("dTmp", "C:\\.packageD\\tmp\\");
+            import std.file : setAttributes;
+            setAttributes("C:\\.packageD\\", 0x2);
         } else version(linux) { 
             dataDirectory = setupFolder("dData", "/var/packageD/");
             configDirectory = setupFolder("dConfig", "/etc/packageD/");

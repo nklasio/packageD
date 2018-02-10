@@ -2,7 +2,9 @@ module cache.PackageCache;
 
 struct PackageCache {
     import core.RepositoryManager : RepositoryType;
-    import std.stdio : writeln;
+    import std.string;
+    import std.path;
+    import std.file;
     public static: 
 
     void buildCaches() {
@@ -14,8 +16,8 @@ struct PackageCache {
             import std.conv : to;
             import core.EnvironmentManager : EnvironmentManager;
             auto repository = to!string(cast(OriginalType!RepositoryType)rep);
-            auto repoPath = std.string.format("%s%s%s", EnvironmentManager.repositoryDirectory, repository, std.path.dirSeparator);
-            if(std.file.exists(repoPath)){
+            auto repoPath = format("%s%s%s", EnvironmentManager.repositoryDirectory, repository, dirSeparator);
+            if(exists(repoPath)){
                 auto pacs = filter!(ent => ent.isFile)(dirEntries(repoPath, "{*.tar*,*.pacD}", SpanMode.shallow)).array;
                 foreach(p; pacs) {
                     repositoryCache[rep] ~= p;
@@ -31,7 +33,7 @@ struct PackageCache {
             import std.conv : to;
             import core.EnvironmentManager : EnvironmentManager;
             auto repository = to!string(cast(OriginalType!RepositoryType)rep);
-            auto cacheFile = std.string.format("%s%s%scache.json", EnvironmentManager.repositoryDirectory, repository, std.path.dirSeparator);
+            auto cacheFile = format("%s%s%scache.json", EnvironmentManager.repositoryDirectory, repository, dirSeparator);
             
             import std.json : JSONValue, toJSON;
             JSONValue jValue;
@@ -47,7 +49,6 @@ struct PackageCache {
         import std.algorithm.searching : canFind;
         import std.stdio : writeln;
         import std.string : format;
-        import std.array : split;
         foreach(p; getCacheForRepositoryType(type)){
             writeln(p);
             if(canFind(p, pac)){
