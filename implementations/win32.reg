@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\pacD]
+"URL Protocol"=""
+@="URL:pacD Protocol"
+"DefaultIcon"=""
+
+[HKEY_CLASSES_ROOT\pacD\shell]
+
+[HKEY_CLASSES_ROOT\pacD\shell\open]
+
+[HKEY_CLASSES_ROOT\pacD\shell\open\command]
+@="\"C:\\packageD\\packaged.exe\" \"%1\""
