@@ -4,6 +4,7 @@ class packageD {
     import core.EnvironmentManager : EnvironmentManager;
     import std.stdio;
     import std.string;
+    import std.json;
     
     import core.command.CommandManager;
     CommandManager commandManager;
@@ -19,6 +20,20 @@ class packageD {
         RepositoryManager repositoryManager = new RepositoryManager();
         ConfigurationManager configurationManager = new ConfigurationManager(repositoryManager);
         PackageCache.writeCaches();
+
+        if(args.length == 2) {
+            import std.array : replace;
+            import std.algorithm.searching : startsWith;
+            auto req = args[1].replace("%22", "\"");
+            if(startsWith(req, "pacd://")) {
+                req = chompPrefix(req, "pacd://");
+                req = chop(req);
+
+                auto json = parseJSON(req);
+                writeln(json);
+            }
+        }
+
         commandManager = new CommandManager();
         commandLoop(commandManager);
     }
