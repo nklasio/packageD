@@ -27,10 +27,17 @@ class packageD {
             auto req = args[1].replace("%22", "\"");
             if(startsWith(req, "pacd://")) {
                 req = chompPrefix(req, "pacd://");
-                req = chop(req);
-
-                auto json = parseJSON(req);
-                writeln(json);
+                import std.net.curl : get, CurlException;
+                try {
+                    auto response = get(format("%s", req));
+                    repositoryManager.RequestPacD(parseJSON(response));
+                } catch(CurlException ex) {
+                    writeln(ex);
+                    stdin.readln();
+                } catch(JSONException ex) {
+                    writeln(ex);
+                    stdin.readln();
+                }
             }
         }
 
@@ -52,12 +59,9 @@ class packageD {
                 auto command = splittedInput[0];
                 auto res = commandManager.execute(command, splittedInput.remove(0));
                 if(res == 2) {
-                    writeln(format("%s is not a registered command! To see all available commands type help", command));
+                    writeln(format("[E]%s is not a registered command! To see all available commands type help", command));
                 }
-
             }
-            
-
         }
     }
 

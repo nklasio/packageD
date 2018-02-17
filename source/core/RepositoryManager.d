@@ -6,12 +6,13 @@ enum RepositoryType {
 }
 import std.json;
 import core.EnvironmentManager;
+import std.stdio : writeln;
+
 
 class RepositoryManager {
     public:
     void Info(RepositoryType type, JSONValue pac) {
         import std.string : format;
-        import std.stdio : writeln;
 
         writeln(format("Found 1 package! %s", pac["Name"].str));
         writeln(format("Description: %s", pac["Description"].str));
@@ -144,7 +145,28 @@ class RepositoryManager {
         }
     }
 
-
+    bool RequestPacD(JSONValue pacDObject) {
+        import std.string : format;
+        //writeln(pacDObject["package"]);
+        auto pack = pacDObject["package"];
+        writeln("_____________________________________________");
+        writeln(format("Name: %s", pack["name"].str));
+        string ver = format("%s.%s.%s",pack["major"], pack["minor"], pack["patch"]);
+        writeln(format("Version: %s", ver));
+        writeln(format("Author: %s", pack["author"].str));
+        writeln("_____________________________________________");
+        writeln(format("You are about to install \"%s\" : v.%s by %s. Continue installing? [Y|n]", pack["name"].str, ver, pack["author"].str));
+        import std.stdio : stdin;
+        import std.algorithm.searching : canFind;
+        auto read = stdin.readln();
+        if(read.canFind("n")){
+            writeln("Installation abort by user!");
+            return false;
+        } else {
+            writeln("Installing...");
+        }
+        return true;
+    }
 
     void addMirror(string repository) {
         this.mirrors ~= repository;

@@ -15,3 +15,4 @@ packaged-test-*
 config/
 debug.request
 .vscode/launch.json
+libcurl-x86.dll.deac
