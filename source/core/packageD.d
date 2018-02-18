@@ -31,6 +31,8 @@ class packageD {
                 try {
                     auto response = get(format("%s", req));
                     repositoryManager.RequestPacD(parseJSON(response));
+                    writeln("Press any key to continue!");
+                    stdin.readln();
                 } catch(CurlException ex) {
                     writeln(ex);
                     stdin.readln();
@@ -39,10 +41,11 @@ class packageD {
                     stdin.readln();
                 }
             }
+        } else {
+            commandManager = new CommandManager();
+            commandLoop(commandManager);
         }
 
-        commandManager = new CommandManager();
-        commandLoop(commandManager);
     }
 
     import std.algorithm.comparison;

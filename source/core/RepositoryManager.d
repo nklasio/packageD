@@ -146,7 +146,9 @@ class RepositoryManager {
     }
 
     bool RequestPacD(JSONValue pacDObject) {
-        import std.string : format;
+        import std.string;
+        import std.file;
+
         //writeln(pacDObject["package"]);
         auto pack = pacDObject["package"];
         writeln("_____________________________________________");
@@ -164,6 +166,101 @@ class RepositoryManager {
             return false;
         } else {
             writeln("Installing...");
+            writeln("#Cloning package");
+            import std.process;
+            import std.array : replace, split;
+
+            import core.EnvironmentManager : EnvironmentManager;
+            auto git = pack["git"].str.replace("\\", "");
+            bool gitSuccess = false;
+            while(gitSuccess) {
+                auto pipes = pipeProcess(["git", "clone", git, "--depth", "1"], Redirect.stdout | Redirect.stderr, null, Config.none, EnvironmentManager.tmpDirectory);
+
+                scope(exit) wait(pipes.pid);
+
+                string[] errors;
+                foreach (line; pipes.stderr.byLine) errors ~= line.idup;
+                foreach(error; errors) {
+                    writeln(error);
+                    if(error.canFind("already exists")) {
+                        rmdirRecurse(EnvironmentManager.tmpDirectory ~ pack["name"].str);
+                    }
+                    if(error.canFind("fatal")) return false;
+                }
+                gitSuccess = true;
+            }
+            auto packageDir = format("%s%s", EnvironmentManager.tmpDirectory, pack["name"].str);
+            if(exists(packageDir)) {
+                writeln("Successfully cloned package!");
+                chdir(packageDir);
+                import std.path : dirSeparator;
+                string packaged = format("%s%s%s%s", EnvironmentManager.tmpDirectory, pack["name"].str, dirSeparator, "packaged.json");
+               
+                if(exists(packaged)){
+                    auto build = parseJSON(readText(packaged));
+                    {
+                        writeln("#Running Tests! THIS MAY TAKE A WHILE!");
+                        auto testArgs = build["build"]["test"].str;
+                        auto testPipe = pipeProcess(testArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
+                        string[] testOutput;
+                        foreach (line; testPipe.stdout.byLine) testOutput ~= line.idup;
+                        string[] testErrors;
+                        foreach (line; testPipe.stderr.byLine) testErrors ~= line.idup;
+                        foreach(output; testOutput) {
+                            writeln(output);
+                        }
+                        if(testErrors.length >0) {
+                            foreach(error; testErrors) {
+                                writeln(error);
+                                if(!error.canFind("Excluding")) { 
+                                    writeln("Error while testing.");
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    {
+                        writeln("#Building package! THIS MAY TAKE A WHILE!");
+                        auto buildArgs = build["build"]["build"].str;
+                        auto buildPipe = pipeProcess(buildArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
+                        string[] buildOutput;
+                        foreach (line; buildPipe.stdout.byLine) buildOutput ~= line.idup;
+                        string[] buildErrors;
+                        foreach (line; buildPipe.stderr.byLine) buildErrors ~= line.idup;
+                        foreach(output; buildOutput) {
+                            writeln(output);
+                        }
+                        if(buildErrors.length >0) {
+                            writeln("Error while building.");
+                            foreach(error; buildErrors) {
+                                writeln(error);
+                            }
+                            return false;
+                        }
+                        writeln("Successfully build: " ~ pack["name"].str);
+                    }
+
+                    final switch(build["type"].str) {
+                        case "library":
+                            auto lib = EnvironmentManager.setupSubFolder(EnvironmentManager.dataDirectory, "libraries");
+                            foreach(output; build["output"].array) {
+                                copy(output.str, lib ~ output.str);
+                            }
+                    }
+
+                    writeln(format("SUCCESS! Successfully installed %s : %s by %s", pack["name"].str, pack["author"].str, ver));
+                    try {
+                        chdir(EnvironmentManager.tmpDirectory);
+                        rmdirRecurse(EnvironmentManager.tmpDirectory ~ pack["name"].str);
+                    } catch(FileException ex) {
+                        writeln(ex.msg);
+                    }
+                } else {
+                    writeln("Package is not a valid packageD package... Please report this to the author!");
+                    return false;
+                }
+            }
         }
         return true;
     }
