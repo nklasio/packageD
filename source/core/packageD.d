@@ -19,7 +19,7 @@ class packageD {
         import core.ConfigurationManager : ConfigurationManager;
         RepositoryManager repositoryManager = new RepositoryManager();
         ConfigurationManager configurationManager = new ConfigurationManager(repositoryManager);
-        PackageCache.writeCaches();
+        //PackageCache.writeCaches();
 
         if(args.length == 2) {
             import std.array : replace;

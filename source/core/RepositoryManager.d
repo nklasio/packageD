@@ -199,7 +199,8 @@ class RepositoryManager {
                
                 if(exists(packaged)){
                     auto build = parseJSON(readText(packaged));
-                    {
+
+                    if(build["build"]["test"].str.length > 0) {
                         writeln("#Running Tests! THIS MAY TAKE A WHILE!");
                         auto testArgs = build["build"]["test"].str;
                         auto testPipe = pipeProcess(testArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
@@ -221,7 +222,8 @@ class RepositoryManager {
                         }
                     }
 
-                    {
+
+                    if(build["build"]["build"].str.length > 0){
                         writeln("#Building package! THIS MAY TAKE A WHILE!");
                         auto buildArgs = build["build"]["build"].str;
                         auto buildPipe = pipeProcess(buildArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
@@ -242,12 +244,25 @@ class RepositoryManager {
                         writeln("Successfully build: " ~ pack["name"].str);
                     }
 
-                    final switch(build["type"].str) {
+                    switch(build["type"].str) {
                         case "library":
                             auto lib = EnvironmentManager.setupSubFolder(EnvironmentManager.dataDirectory, "libraries");
                             foreach(output; build["output"].array) {
                                 copy(output.str, lib ~ output.str);
                             }
+                            break;
+                        case "application":
+                            auto bin = EnvironmentManager.setupSubFolder(EnvironmentManager.dataDirectory, "bin");
+                            auto app = EnvironmentManager.setupSubFolder(bin, build["name"].str);
+                            foreach(output; build["output"].array) {
+                                copy(output.str, bin ~ output.str);
+                            }
+                            
+                            break;
+                        default: 
+                            writeln("packageD does not support this project type! " ~ build["type"].str);
+                            return false;
+                            
                     }
 
                     writeln(format("SUCCESS! Successfully installed %s : %s by %s", pack["name"].str, ver, pack["author"].str));
