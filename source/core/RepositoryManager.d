@@ -172,22 +172,23 @@ class RepositoryManager {
 
             import core.EnvironmentManager : EnvironmentManager;
             auto git = pack["git"].str.replace("\\", "");
-            bool gitSuccess = false;
-            while(gitSuccess) {
-                auto pipes = pipeProcess(["git", "clone", git, "--depth", "1"], Redirect.stdout | Redirect.stderr, null, Config.none, EnvironmentManager.tmpDirectory);
+            
+            auto pipes = pipeProcess(["git", "clone", git, "--depth", "1"], Redirect.stdout | Redirect.stderr, null, Config.none, EnvironmentManager.tmpDirectory);
 
-                scope(exit) wait(pipes.pid);
+            scope(exit) wait(pipes.pid);
 
-                string[] errors;
-                foreach (line; pipes.stderr.byLine) errors ~= line.idup;
-                foreach(error; errors) {
-                    writeln(error);
-                    if(error.canFind("already exists")) {
-                        rmdirRecurse(EnvironmentManager.tmpDirectory ~ pack["name"].str);
-                    }
-                    if(error.canFind("fatal")) return false;
+            string[] errors;
+            foreach (line; pipes.stderr.byLine) errors ~= line.idup;
+            foreach(error; errors) {
+                writeln(error);
+                if(error.canFind("already exists")) {
+                    writeln("#################################################################");
+                    writeln("PACKAGED D CAN NOT HANDLE CLEANING TMP DIRECTORY IN THIS VERSION!");
+                    writeln("YOU MAY FIX THIS BY CLEANING " ~ EnvironmentManager.tmpDirectory ~ " manualy!");
+                    writeln("#################################################################");
+                    return false;
                 }
-                gitSuccess = true;
+                if(error.canFind("fatal")) return false;
             }
             auto packageDir = format("%s%s", EnvironmentManager.tmpDirectory, pack["name"].str);
             if(exists(packageDir)) {
@@ -249,13 +250,7 @@ class RepositoryManager {
                             }
                     }
 
-                    writeln(format("SUCCESS! Successfully installed %s : %s by %s", pack["name"].str, pack["author"].str, ver));
-                    try {
-                        chdir(EnvironmentManager.tmpDirectory);
-                        rmdirRecurse(EnvironmentManager.tmpDirectory ~ pack["name"].str);
-                    } catch(FileException ex) {
-                        writeln(ex.msg);
-                    }
+                    writeln(format("SUCCESS! Successfully installed %s : %s by %s", pack["name"].str, ver, pack["author"].str));
                 } else {
                     writeln("Package is not a valid packageD package... Please report this to the author!");
                     return false;
