@@ -165,31 +165,25 @@ class RepositoryManager {
             writeln("Installation abort by user!");
             return false;
         } else {
-            writeln("Installing...");
-            writeln("#Cloning package");
             import std.process;
+            import std.file : chdir;
             import std.array : replace, split;
+            import std.conv : to;
 
             import core.EnvironmentManager : EnvironmentManager;
-            auto git = pack["git"].str.replace("\\", "");
-            
-            auto pipes = pipeProcess(["git", "clone", git, "--depth", "1"], Redirect.stdout | Redirect.stderr, null, Config.none, EnvironmentManager.tmpDirectory);
+            writeln("Installing...");
+            chdir(EnvironmentManager.tmpDirectory);
 
-            scope(exit) wait(pipes.pid);
-
-            string[] errors;
-            foreach (line; pipes.stderr.byLine) errors ~= line.idup;
-            foreach(error; errors) {
-                writeln(error);
-                if(error.canFind("already exists")) {
-                    writeln("#################################################################");
-                    writeln("PACKAGED D CAN NOT HANDLE CLEANING TMP DIRECTORY IN THIS VERSION!");
-                    writeln("YOU MAY FIX THIS BY CLEANING " ~ EnvironmentManager.tmpDirectory ~ " manualy!");
-                    writeln("#################################################################");
-                    return false;
-                }
-                if(error.canFind("fatal")) return false;
+            writeln("#Cloning package");
+            auto proc = executeShell("git clone " ~ pack["git"].str.replace("\\", "") ~ " --depth 1");
+            if(proc.status != 0) {
+                writeln("ERROR! : Program returned " ~ to!string(proc.status));
+                writeln(proc.output);
+                return false;
+            } else {
+                writeln(proc.output);
             }
+
             auto packageDir = format("%s%s", EnvironmentManager.tmpDirectory, pack["name"].str);
             if(exists(packageDir)) {
                 writeln("Successfully cloned package!");
@@ -202,44 +196,25 @@ class RepositoryManager {
 
                     if(build["build"]["test"].str.length > 0) {
                         writeln("#Running Tests! THIS MAY TAKE A WHILE!");
-                        auto testArgs = build["build"]["test"].str;
-                        auto testPipe = pipeProcess(testArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
-                        string[] testOutput;
-                        foreach (line; testPipe.stdout.byLine) testOutput ~= line.idup;
-                        string[] testErrors;
-                        foreach (line; testPipe.stderr.byLine) testErrors ~= line.idup;
-                        foreach(output; testOutput) {
-                            writeln(output);
-                        }
-                        if(testErrors.length >0) {
-                            foreach(error; testErrors) {
-                                writeln(error);
-                                if(!error.canFind("Excluding")) { 
-                                    writeln("Error while testing.");
-                                    return false;
-                                }
-                            }
+                        proc = executeShell(build["build"]["test"].str);
+                       if(proc.status != 0) {
+                            writeln("ERROR! : Program returned " ~ to!string(proc.status));
+                            writeln(proc.output);
+                            return false;
+                        } else {
+                            writeln(proc.output);
                         }
                     }
 
-
                     if(build["build"]["build"].str.length > 0){
-                        writeln("#Building package! THIS MAY TAKE A WHILE!");
-                        auto buildArgs = build["build"]["build"].str;
-                        auto buildPipe = pipeProcess(buildArgs.split(" "), Redirect.stdout | Redirect.stderr, null, Config.none, packageDir);
-                        string[] buildOutput;
-                        foreach (line; buildPipe.stdout.byLine) buildOutput ~= line.idup;
-                        string[] buildErrors;
-                        foreach (line; buildPipe.stderr.byLine) buildErrors ~= line.idup;
-                        foreach(output; buildOutput) {
-                            writeln(output);
-                        }
-                        if(buildErrors.length >0) {
-                            writeln("Error while building.");
-                            foreach(error; buildErrors) {
-                                writeln(error);
-                            }
+                       writeln("#Building Package! THIS MAY TAKE A WHILE!");
+                        proc = executeShell(build["build"]["build"].str);
+                       if(proc.status != 0) {
+                            writeln("ERROR! : Program returned " ~ to!string(proc.status));
+                            writeln(proc.output);
                             return false;
+                        } else {
+                            writeln(proc.output);
                         }
                         writeln("Successfully build: " ~ pack["name"].str);
                     }
