@@ -5,6 +5,9 @@
 	],
 	"description": "A D based package manager",
 	"copyright": "Copyright © 2018, Niklas Stambor",
-	"license": "DO NOT USE",
+	"license": "GPL-3.0",
+	"libs": [
+		"curl"
+	]
 
 }
