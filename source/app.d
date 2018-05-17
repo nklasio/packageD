@@ -1,6 +1,6 @@
 import std.getopt;
-import core.Package;
-import core.Version;
+import packaged.Package;
+import packaged.Version;
 
 
 void main(string[] args)

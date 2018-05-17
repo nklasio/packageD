@@ -1,0 +1,31 @@
+{
+    "project" : {
+        "name": "packageD",
+        "author": "Niklas Stambor",
+        "license": "GPL-3.0"
+    },
+    "variables": [
+        {"name" : "name", "value": "packageD"},
+        {"name" : "version", "value": "0.1.0"},
+        {"name" : "buildDir", "value" :"build-$(version)"},
+        {"name" : "buildIDVersion", "value": "0-3-0"}
+    ],
+    "sourceDirs": [
+        {"path": "source", "recursive": true},
+        {"path": "import", "recursive": true}
+    ],
+    "dependencies": [
+        {"lib": "dmd", "buildRequirement": true},
+        {"lib": "buildID", "buildRequirement": true}
+    ],
+    "functions": {
+        "prepare": [],
+        "build": [
+            {"command": "dmd -c -of=$(name)-$(version) -od=$(buildDir) -release  $(source:d) $(source:di) libs/buildID-$(buildIDVersion)-lib.a", "requirements": [] }
+            
+        ],
+        "check": [
+            {"command" :"rm -rf build-$(version)", "requirements": []}
+        ]
+    }
+}
